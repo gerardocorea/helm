@@ -497,7 +497,7 @@ Loop:
 // to work with along with the chart dependencies. It will find the deps not
 // in a known repo and attempt to ensure the data is present for steps like
 // version resolution.
-func (m *Manager) ensureMissingRepos(repoNames map[string]string, deps []*chart.Dependency) (map[string]string, error) {
+func (m *Manager) ensureMissingRepos(repoNames map[string]string, deps []*chart.Dependency) error {
 
 	var ru []*repo.Entry
 
@@ -514,41 +514,7 @@ func (m *Manager) ensureMissingRepos(repoNames map[string]string, deps []*chart.
 			continue
 		}
 
-		// The generated repository name, which will result in an index being
-		// locally cached, has a name pattern of "helm-manager-" followed by a
-		// sha256 of the repo name. This assumes end users will never create
-		// repositories with these names pointing to other repositories. Using
-		// this method of naming allows the existing repository pulling and
-		// resolution code to do most of the work.
-		rn, err := key(dd.Repository)
-		if err != nil {
-			return repoNames, err
-		}
-		rn = managerKeyPrefix + rn
-
-		repoNames[dd.Name] = rn
-
-		// Assuming the repository is generally available. For Helm managed
-		// access controls the repository needs to be added through the user
-		// managed system. This path will work for public charts, like those
-		// supplied by Bitnami, but not for protected charts, like corp ones
-		// behind a username and pass.
-		ri := &repo.Entry{
-			Name: rn,
-			URL:  dd.Repository,
-		}
-		ru = append(ru, ri)
-	}
-
-	// Calls to UpdateRepositories (a public function) will only update
-	// repositories configured by the user. Here we update repos found in
-	// the dependencies that are not known to the user if update skipping
-	// is not configured.
-	if !m.SkipUpdate && len(ru) > 0 {
-		fmt.Fprintln(m.Out, "Getting updates for unmanaged Helm repositories...")
-		if err := m.parallelRepoUpdate(ru); err != nil {
-			return repoNames, err
-		}
+		return ErrRepoNotFound{dd.Repository}
 	}
 
 	return repoNames, nil
