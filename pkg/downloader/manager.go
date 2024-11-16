@@ -501,6 +501,8 @@ func (m *Manager) ensureMissingRepos(repoNames map[string]string, deps []*chart.
 
 	var ru []*repo.Entry
 
+	missingRepos := ErrRepoNotFound{}
+
 	for _, dd := range deps {
 
 		// If the chart is in the local charts directory no repository needs
@@ -514,7 +516,11 @@ func (m *Manager) ensureMissingRepos(repoNames map[string]string, deps []*chart.
 			continue
 		}
 
-		return ErrRepoNotFound{dd.Repository}
+		missingRepos.Repos = append(missingRepos.Repos, dd.Repository)
+	}
+
+	if len(missingRepos.Repos) > 0 {
+		return repoNames, missingRepos
 	}
 
 	return repoNames, nil

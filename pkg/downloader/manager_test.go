@@ -598,3 +598,25 @@ func TestKey(t *testing.T) {
 		}
 	}
 }
+
+func TestEnsureMissingRepos(t *testing.T) {
+
+	tt := []struct {
+		name string
+		charts []chart.Dependency,
+		error bool
+	}{
+		{
+			"expect error due to not registered repo",
+			[]chart.Dependency{
+				{Name: "example-test", Repository: "http://example.com/test"}
+			},
+			true,
+		}
+	}
+
+
+	for _, tc := range tt {
+		
+	}
+}
